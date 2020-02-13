@@ -16,7 +16,7 @@
 title: Nikhil Kotian
 email: nikotian22@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Sun, books, beer and weights. Yes, in that order!
+  Sun, books, beer and weights. Yes, in that order! 
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "nikhilkotian.com" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: ni_rant
