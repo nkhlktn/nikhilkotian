@@ -1,0 +1,90 @@
+---
+layout: post
+title:  "XMacros - C++"
+date:   2020-02-19 22:18:59 +0000
+categories: jekyll update
+one_id: "https://developers.google.com/protocol-buffers"
+---
+Everything in C++/C is `types`. Not only are they the part of the building blocks but they also prevent run-time issues preemptively. This comes at the cost of verbosity in language, inflexibility and duplicated code. `Templates` is a construct to automate generation of classes based on type. A lot less known are XMacros. They are based on macros. It will not seem like a surprise. Unsurprisingly, it is tricky too. So the post is more about what XMacros and not a comparison between templates.
+
+Let's understand XMacros with a problem:
+
+I came across the problem while working with Google Proto buffers. For people new to proto buffers, it is a tool that allows auto generation of message descriptions and associated serialization and deserialization functions. This allows for inter-exchange of data without the network stack worrying about data content changed. [ProtocolBuffer](https://developers.google.com/protocol-buffers). I have a system which has a set of messages and they are nodes on a CAN bus communicate using these messages. The problem with protocol buffers is that it requires the consumer to know the type of the packet data beforehand. This means wrapping the serialized data with an identifier. It may also be the case that the transport requires breaking up of serialized data into part. For example CAN data can only be sent with 11/23 bit data packet. This means additional information bits will need to added to the data packet. These additional bits are based on the type of message. Conversion of type message identifier could be done through a lookup or we can auto-generate a list of functions that convert a specific type of message from a template. That is what XMacros does. 
+
+Let's say we three messages `Pressure`, `Inclination`, `Speed`. Each message is depicted by a struct and associated functions in a .h file as such
+{% highlight c++ %}
+typedef struct Pressure {
+  //internal data 1
+  //internal data 2
+  //...
+  //internal data 3
+};
+
+
+#define Pressure_ID 234 //ID used for serialization
+#define Pressure_size 5 //Serialization file
+{% endhighlight %}
+
+Below functions should be `auto-generated`
+{% highlight c++ %}
+void Pressure_SerializeMsg(MessageBuffer& msg, const Pressure& data) {
+  //Encode bit and convert to transport packets
+}
+
+void Inclination_SerializeMsg(MessageBuffer& msg, const Inclination& data){...}
+
+void SpeedMsg_SerializeMsg(MessageBuffer& msg, const Speed& data){...}
+
+{% endhighlight %}
+
+Auto-generating saves times in maintenance. When message definitions are changed they will not affect the interchange as every function generated is a copy with IDs changed/structure changed. Any error will appear at the application level if a message type name was changed or just does not exist.
+
+In the message definition file add a macro in the following idiom
+{% highlight c++ %}
+#define MESSAGES\
+#define PB_MSG(Pressure_ID,Pressure)\
+#define PB_MSG(Inclination_ID,Inclination)\
+#define PB_MSG(Speed_ID,Speed)
+
+{% endhighlight %}
+
+Then in a seperate file `.h` file. Include the previous message definition header and write the following.
+{% highlight c++ %}
+#define PB_MSG(id, name)\
+void name ##_SerializeMsg(MessageBuffer& msg, const name & data) {\
+msg.AddID(id);\
+serialized.Serialize(data);\
+}
+MESSAGES
+#undef PB_MSG
+{% endhighlight %}
+
+The preprocessors will evaluate to :
+{% highlight c++ %}
+
+void Pressure_SerializeMsg(MessageBuffer& msg, const Pressure & data) {
+  msg.AddID(Pressure_ID);
+  serialized.Serialize(data);
+}
+
+void Inclination_SerializeMsg(MessageBuffer& msg, const Inclination & data) {
+  msg.AddID(Inclination_ID);
+  serialized.Serialize(data);
+}
+
+void Speed_SerializeMsg(MessageBuffer& msg, const Speed & data) {
+  msg.AddID(Speed_ID);
+  serialized.Serialize(data);
+}
+{% endhighlight %}
+
+Voila! Based on messages added or removed in `MESSAGES`, functions will be generated or not. The above example is a trivial without regards to architecture(without giving too much away too :) ). I have been able to use XMacros in places like `switch-case` and even class generation. However, `templates` can be used effectively and not.
+
+**Pros**
+--Automatic code generation.
+--Saves maintenance time by isolating the functionality and auto-generating them. This reduces having to change code in multiple functions.
+
+**Cons**
+--Debugging. Walking through disassembly can be a pain. Although the same pain can be felt when using templates.
+--Macros! They can be painful! Also the macro names are not part of the compiler symbol table as they are pre-processed. This makes it difficult to debug when compilation fails.
+
