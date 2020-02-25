@@ -1,15 +1,15 @@
 ---
 layout: post
-title:  "XMacros - C++"
+title:  "X Macros - C++"
 date:   2020-02-19 22:18:59 +0000
 categories: jekyll update
 one_id: "https://developers.google.com/protocol-buffers"
 ---
-Everything in C++/C is `types`. Not only are they the part of the building blocks but they also prevent run-time issues preemptively. This comes at the cost of verbosity in language, inflexibility and duplicated code. `Templates` is a construct to automate generation of classes based on type. A lot less known are XMacros. They are based on macros. It will not seem like a surprise. Unsurprisingly, it is tricky too. So the post is more about what XMacros and not a comparison between templates.
+Everything in C++/C is `types`. Not only are they the part of the building blocks but they also prevent run-time issues preemptively. This comes at the cost of verbosity in language, inflexibility and duplicated code. `Templates` is a construct to automate generation of classes based on type. A lot less known are X Macros. Unsurprisinlgy, they are based on macros and tricky too. So the post is more about what X Macros and not a comparison between templates.
 
-Let's understand XMacros with a problem:
+Let's understand X Macros with a problem:
 
-I came across the problem while working with Google Proto buffers. For people new to proto buffers, it is a tool that allows auto generation of message descriptions and associated serialization and deserialization functions. This allows for inter-exchange of data without the network stack worrying about data content changed. [ProtocolBuffer](https://developers.google.com/protocol-buffers). I have a system which has a set of messages and they are nodes on a CAN bus communicate using these messages. The problem with protocol buffers is that it requires the consumer to know the type of the packet data beforehand. This means wrapping the serialized data with an identifier. It may also be the case that the transport requires breaking up of serialized data into part. For example CAN data can only be sent with 11/23 bit data packet. This means additional information bits will need to added to the data packet. These additional bits are based on the type of message. Conversion of type message identifier could be done through a lookup or we can auto-generate a list of functions that convert a specific type of message from a template. That is what XMacros does. 
+I came across the problem while working with Google Proto buffers. For people new to proto buffers, it is a tool that allows auto generation of message descriptions and associated serialization and deserialization functions. This allows for inter-exchange of data without the network stack worrying about data content changes. [ProtocolBuffer](https://developers.google.com/protocol-buffers). I have a system which has a set of messages and they are nodes on a CAN bus communicate using these messages. The problem with protocol buffers is that it requires the consumer to know the type of the packet data beforehand. This means wrapping the serialized data with an identifier. It may also be the case that the transport requires breaking up of serialized data into part. For example CAN data can only be sent with 11/23 bit data packet. This means additional information bits will need to added to the data packet. These additional bits are based on the type of message. Conversion of type message identifier could be done through a lookup or we can auto-generate a list of functions that convert a specific type of message from a template. That is what X Macros does. 
 
 Let's say we three messages `Pressure`, `Inclination`, `Speed`. Each message is depicted by a struct and associated functions in a .h file as such
 {% highlight c++ %}
@@ -78,10 +78,10 @@ void Speed_SerializeMsg(MessageBuffer& msg, const Speed & data) {
 }
 {% endhighlight %}
 
-Voila! Based on messages added or removed in `MESSAGES`, functions will be generated or not. The above example is a trivial without regards to architecture(without giving too much away too :) ). I have been able to use XMacros in places like `switch-case` and even class generation. However, `templates` can be used effectively and not.
+Voila! Based on messages added or removed in `MESSAGES`, functions will be generated or not. The above example is a trivial without regards to architecture(without giving too much away too :) ). I have been able to use X Macros in places like `switch-case` and even class generation. However, `templates` can be used effectively with some issues.
 
 **Pros**
---Automatic code generation.
+--Code generation with less effort when preprocessors work.
 --Saves maintenance time by isolating the functionality and auto-generating them. This reduces having to change code in multiple functions.
 
 **Cons**
