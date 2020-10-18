@@ -2,8 +2,7 @@
 layout: post
 title:  "X Macros - C++"
 date:   2020-02-19 22:18:59 +0000
-categories: jekyll update
-one_id: "https://developers.google.com/protocol-buffers"
+categories: C++
 ---
 Everything in C++/C is `types`. Not only are they the part of the building blocks but they also prevent run-time issues preemptively. This comes at the cost of verbosity in language, inflexibility and duplicated code. `Templates` is a construct to automate generation of classes based on type. A lot less known are X Macros. Unsurprisinlgy, they are based on macros and tricky too. So the post is more about what X Macros and not a comparison between templates.
 
