@@ -4,17 +4,17 @@ title:  "On JS, Promises & Async/Await"
 date:   2020-10-17 19:00:00 +0000
 tags: JavaScript
 ---
-In the 10 years (since the start), I have mainly worked on `C/C++ software development`. I have used `Python` over that span to simulate mathematical models for the signal processing implementations we desired. So I had built a programming-model mainly built on these 3 languages and in systems that did not have much CPU to run on. Recently, I started working on TypeScript and before I say anything, I would like to post something that the creator of node.JS said:
+In the 10 years (since the start) of my programming experience, I have mainly worked on `C/C++ software development`. I have used `Python` over that span to simulate mathematical models for signal processing implementations. So my contextual programming-model is primied on these 3 languages and in systems that did not have much CPU to run on. Recently, I started working on TypeScript and before I say anything, I would like to post something that the creator of node.JS said:
 >You can never understand everything. But, you should push yourself to understand the system.
 >-Ryan Dahl
 
-That is a handy insight. JS was made that responsiveness of bandwidth in a loosely connected world is tolerated. This therefore can result in creating a space in which developers can scale up faster. The development experience was enriched. The power of asynhronous programming model, devs were left to play around with application without worrying too much about portability, threading issues, tooling cost, updatability and overall development costs. A reminder/introduction of the event loop is now important in brief for programmers similar to my experience. Firstly, there are no threads in JS. As far as the developer is concerned everything is being run as statements are found by incrementing/branching. On the other hand events can also be onto queue which gets executed at some point the engine decides to pop the queue. There is some heap provided for allocation but deallocation is taken care of by the JS engine. Publisher-subscriber model with game loops seem to be a good idea then for the JS programmer's model. The amount of cpu/memory space allocated to the `event-loop thread` is a question we are not sure about and actually works to the advantage of the developer. An abstraction is created from which business intelligence logic can be written upon. A clear demarcation of stacks for most of the applications that can sustain some performance hit.
+That is a handy insight. JS was made for systems where millisecond responsiveness is not required. I/O's and memory reads/writes take time and that time could be utilized for some other statements. Due to the reduction in requirements for responsiveness problems like threading are relaxed and can be abstracted out. A memory management system is an added advantage. This is where the `event queue` and `frame` comes in. For developers, statements follows procedural execution. On the other hand, `events/callbacks` can also be added onto the queue which gets executed at some point the engine decides to pop the queue. There is some heap provided for allocation but deallocation is taken care of by the JS engine. `Publisher-subscriber` architecture with `game loops` seem to be a good idea then for the JS engine model. The amount of cpu/memory space allocated to the `event loop thread` is hidden from the developer. This abstraction works to the advantage of the developer as they can focus more on business logic scaling. A clear demarcation of stacks is created for applications that can sustain some performance hit.
 
 ![JS Programming model](/images/The_Javascript_Runtime_Environment_Example.svg "JS Programmer's model"){:.centre-image}
 
 *(Pic courtesy Mozilla: [A further deep dive into the elements of the JS programmers's model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop)).*
 
-Leveraging the asynchronicity was important to allow using up time spent waiting for blocking I/O. So if an operation blocks, the subsequent operations resulting from the operation passing/failing can be called back later. This is what is widespreadly used and has become a programming idiom strongly associated with JS. For example:
+Leveraging the asynchronicity was important to allow using up time spent waiting for blocking I/O as explained before. If an operation blocks, subsequent operations can be called later. This `callback` idiom or programming construct is used widely across JS applications. For example:
 
 {% highlight typescript %}
 type CallBackFn = (error: ErrorType, response: ResponseData) => void;
@@ -31,7 +31,7 @@ function read(request: RequestData, cb: CallBackFn): void {
 }
 {% endhighlight %}
 
-The `read` function can take multiple routes and the above code sample is just an example. There is nothing stopping anyone to call another callback only if the `CallbackFn` takes another argument called `CallbackFn`. A call back on the other hand can be `undefined`. The above though leads to nested calls or `callback hell`. A general structure to callback is below. As you can see `callback hell` is really `readability hell`. It follows a general structure of `Do something-> If something passes then do A -> Else do B`. This structure got baked into `ES6` in the form of `Promises` which aids readability.
+Callbacks can call other functions and so on. This happens when certain calls need to occur in a certain order. This however, leads to nested calls or `callback hell`. A general structure to callback is below. As you can see `callback hell` is really `readability hell`. It follows a general structure of `Do something-> If something passes then do A -> Else do B`. This structure got baked into `ES6` in the form of `Promises` which aids readability.
 
 {% highlight typescript %}
 function GetFile(request: RequestData, cb: CallBackFn): void {
@@ -56,7 +56,7 @@ function GetFile(request: RequestData, cb: CallBackFn): void {
 }
 {% endhighlight %}
 
-Promises is just a type which has a `then` & `catch` method. `catch` is called when a `reject` callback is called while `then` is called when a `resolve` is called. Something like below. However, it is assumed that `func1` returns a `Promise`.
+Promises is just a type which has a `then` & `catch` method. `catch` is called when a `reject` callback is called whereas a `then` is called when a `resolve` is called. Something like below. It is assumed that `func1` returns a `Promise`.
 
 {% highlight typescript %}
 function GetFile(request: RequestData, cb: CallBackFn): void {
@@ -79,7 +79,9 @@ function GetFile(request: RequestData, cb: CallBackFn): void {
 }
 {% endhighlight %}
 
-As seen the `then` method calls the `callback` provided and passes the `resolve` or `reject` callbacks. As explained before, `resolve` calls the next callback which in turn calls `func3`. If an error occurs, `reject` gets called which in turn calls `catch` and does not add anything else into the event queue. The above code as seen improves readability but still lags requires writing down callbacks into the function argument such that a single line spans multiple lines. This is again solved by the `async/await` construct of Javascript. A function if `async` can have an `await` function call in its body. The `function` is called `async` by placing `async` keyword before the function definition. `await` keyword precedes a function that returns a `Promise`. It is made sure by the Javascript engine that statements beyond the `await` call will be added to the event queue only when a `resolved Promise` is returned by the callback. On the other hand a `rejected Promise` can be caught using `try...catch` which can lie at the top level of the code. An example which is a modified version of Mozilla's example is as below.
+As seen the `then` method calls the `callback` provided and passes the `resolve` or `reject` callbacks. As explained before, `resolve` calls the next callback which in turn calls `func3`. If an error occurs, `reject` gets called which in turn calls `catch` and skips all the `thens` in between. The above code as seen improves readability. This however, results in `promise chaining` where multiple then calls have to made in a single statement. Although better than before, it still suffers from readability issues.
+
+This is solved by the `async/await` construct of Javascript. A function if `async` can have an `await` function call in its body. The `function` is called `async` by placing `async` keyword before the function definition. `await` keyword precedes a function call that returns a `Promise`. It is made sure by the Javascript engine that statements beyond the `await` call will be added to the event queue only when a `resolved Promise` is returned by the callback. On the other hand a `rejected Promise` can be caught using `try...catch` which can lie at the top level of the code. An example which is a modified version of Mozilla's example is as below.
 
 {% highlight typescript %}
 function resolveAfter2Seconds() {
@@ -105,4 +107,4 @@ asyncCall();
 console.log("Done")
 {% endhighlight %}
 
-It is clear that once you use `async\await` there is no need for code smells like `callback hell` and `promise chaining`. It makes the code look more readable while utilizing the asynchronous property of the JavaScript engine. But that explanation is complete with the `explanation` of the event loop. This is where Ryan's quote acted a guiding force in my search of explanations of these constructs coming from the background that I come from.
+It is clear that once you use `async\await` there is no need for code smells like `callback hell` and `promise chaining`. It makes the code look more readable while utilizing the asynchronous property of the JavaScript engine.
